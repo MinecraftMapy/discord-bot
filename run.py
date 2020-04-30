@@ -15,14 +15,22 @@ headers = {'Accept': 'application/json'}
 
 async def fetch(session, endpoint):
     async with session.get('https://minecraftmapy.pl/api' + endpoint) as response:
-        return await response.json()
+        return {
+            'status': response.status,
+            'json': await response.json(),
+        }
 
 
 @bot.command()
 async def profil(ctx, username):
     async with aiohttp.ClientSession(headers=headers) as session:
         response = await fetch(session, f'/user/{username}')
-    data = response['data']
+
+    if response['status'] != 200:
+        await ctx.send('Nie znaleziono takiego użytkownika!')
+        return
+
+    data = response['json']['data']
 
     embed = Embed(
         title=f'[Profil] {data["info"]["username"]}',
